@@ -7,6 +7,7 @@ my_string::my_string()
 {
     m_data = nullptr;
     m_size= 0;
+    reference.increment();
 }
 
 my_string::my_string(const char* pos)
@@ -28,12 +29,17 @@ my_string::my_string(const char* pos)
         start_ptr++;
     }
 
+    reference.increment();
+
 }
 
 my_string& my_string::operator= (my_string const& s)
 {
     m_data = s.m_data;
     m_size = s.m_size;
+    reference = s.reference;
+
+    reference.increment();
 
     return *this;
 }
@@ -42,11 +48,20 @@ my_string::my_string(my_string const& s)
 {
     m_data = s.m_data;
     m_size = s.m_size;
+    reference = s.reference;
+
+    reference.increment();
+}
+
+my_string::~my_string()
+{
+    // delete [] m_data;
+    reference.decrement();
 }
 
 void my_string::print() const
 {
-    std::cout << m_data << std::endl;
+    std::cout << m_data << " [" << reference.getCount() << "] " << std::endl;
 
 }
 
