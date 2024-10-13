@@ -43,7 +43,8 @@ class bump_allocator {
             if((--allocation_count) == 0){
                 free(bump_ptr);
                 next = bump_ptr;
-                std::cout << "allocation 0, allocated reset: " << static_cast<void*> (next) << std::endl;
+                bytes_allocated = 0;
+                std::cout << "allocation 0, allocater reset: " << static_cast<void*> (next) << std::endl;
             }
 
         }
