@@ -1,4 +1,4 @@
-#include "bump.cpp"
+#include "bump.hpp"
 #include <cstdlib>
 #include <cstring>
 #include <iostream>

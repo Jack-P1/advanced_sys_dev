@@ -45,6 +45,18 @@ DEFINE_TEST_G(testMemoryAllocFailsIfSizeGreaterThanHeap, Bump)
 
 }
 
+DEFINE_TEST_G(testMemoryAllocAddressIsCorrectlyAligned, Bump)
+{
+    bump_allocator bumper(20 * sizeof(int));
+
+    char* x = bumper.alloc<char>(1);
+    TEST_MESSAGE(x != nullptr, "Failed to allocate!!!!");
+
+    int* y = bumper.alloc<int>(1);
+    TEST_MESSAGE((reinterpret_cast<uintptr_t>(y) % alignof(int)) == 0, "Memory address is not aligned!");
+
+}
+
 DEFINE_TEST_G(testMemoryDeallocWhenAllocationCountReachesZero, Bump)
 {
     bump_allocator bumper(20 * sizeof(int));
