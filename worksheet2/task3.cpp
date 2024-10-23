@@ -7,15 +7,10 @@
 
 int main()
 {
-    // bump_allocator bumper(400100);
-
-    // auto (bump_allocator::*funcPtr)(unsigned int, unsigned int) = &bump_allocator::alloc<int>;
-
-    // benchmark bench;
-    // bench.measureAverageFunctionRuntime(funcPtr, &bumper);
 
     bump_down_allocator bumpDown(20);
 
+    std::cout << "Bump down tests: " << std::endl;
     // 1 byte
     char* test = bumpDown.alloc<char>(1);
 
@@ -44,8 +39,9 @@ int main()
     auto (bump_down_allocator::*bumpDownPtr)(unsigned int, unsigned int) = &bump_down_allocator::alloc<int>;
 
     benchmark bench;
-    bench.measureAverageFunctionRuntime(bumpUpPtr, &bumpUpBench);
-    bench.measureAverageFunctionRuntime(bumpDownPtr, &bumpDownBench);
+
+    bench.measureAverageFunctionRuntime(&bump_allocator::alloc<int>, &bumpUpBench, (unsigned int)1,(unsigned int) 0);
+    bench.measureAverageFunctionRuntime(&bump_down_allocator::alloc<int>, &bumpDownBench, (unsigned int)1,(unsigned int) 0);
 
     return 0;
 }
