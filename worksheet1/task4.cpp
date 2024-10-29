@@ -80,18 +80,22 @@ int main()
     // reference count pointer declared to point to string object
     reference_counter<my_string> string1(new my_string("Hello world"));
     string1->print();
-    std::cout << string1.getCount() << std::endl;
+    std::cout << "String 1 reference count: " << string1.getCount() << std::endl;
+
+    // example with int type
+    reference_counter<int> x(new int(5));
+    std::cout << "Reference counter int x value: " << *x << std::endl;
 
     {
         // string 2 created with copy constructor to point to string1
         reference_counter<my_string> string2(string1);
 
         // count incremented to 2
-        std::cout << string1.getCount() << std::endl;
+        std::cout << "String 2 created: count = " << string1.getCount() << std::endl;
     } // string 2 out of scope
 
     // count down to 1
-    std::cout << string1.getCount() << std::endl;
+    std::cout << "String 2 destroyed: count = " << string1.getCount() << std::endl;
 
     return 0;
 }

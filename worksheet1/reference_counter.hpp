@@ -31,6 +31,11 @@ class reference_counter {
                 return this->ref_ptr;
         }
 
+        T& operator*() const
+        {
+                return (*this->ref_ptr);
+        }
+
         unsigned int getCount()
         {
             return *ref_count;
