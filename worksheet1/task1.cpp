@@ -32,6 +32,10 @@ my_string::my_string(const char* pos)
 
 my_string& my_string::operator= (my_string const& s)
 {
+    // self assignment check
+    if(this == &s){
+        return *this
+    }
     m_data = s.m_data;
     m_size = s.m_size;
 
