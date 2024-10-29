@@ -4,8 +4,6 @@
 #include <cstring>
 #include <stdexcept>
 
-
-
 my_string::my_string()
 {
     m_data = nullptr;
@@ -35,6 +33,10 @@ my_string::my_string(const char* pos)
 
 my_string& my_string::operator= (my_string const& s)
 {
+    // self assignment check
+    if(this == &s){
+        return *this;
+    }
     m_data = s.m_data;
     m_size = s.m_size;
 
@@ -46,20 +48,6 @@ my_string::my_string(my_string const& s)
     m_data = s.m_data;
     m_size = s.m_size;
 }
-
-// my_string::~my_string()
-// {
-//     // this is greater than 1 as it includes itself (might need to revisit)
-//     if(reference.getCount() > 1)
-//     {
-//         reference.decrement();
-//     }
-//     else{
-//         std::cout << "Reference count = 0, freeing memory..." << std::endl;
-//         delete m_data;
-//     }
-
-// }
 
 void my_string::print() const
 {
@@ -89,21 +77,21 @@ void my_string::setChar(const int& i, const char& c)
 
 int main()
 {
-
+    // reference count pointer declared to point to string object
     reference_counter<my_string> string1(new my_string("Hello world"));
     string1->print();
     std::cout << string1.getCount() << std::endl;
 
     {
+        // string 2 created with copy constructor to point to string1
         reference_counter<my_string> string2(string1);
+
+        // count incremented to 2
         std::cout << string1.getCount() << std::endl;
     } // string 2 out of scope
-`
+
     // count down to 1
     std::cout << string1.getCount() << std::endl;
-
-    // destroy string 1
-    // delete [] string1;
 
     return 0;
 }
