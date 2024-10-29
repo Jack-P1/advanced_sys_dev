@@ -7,7 +7,7 @@ my_string::my_string()
 {
     m_data = nullptr;
     m_size= 0;
-    reference.increment();
+    ref_count = new unsigned int(0);
 }
 
 my_string::my_string(const char* pos)
@@ -29,48 +29,54 @@ my_string::my_string(const char* pos)
         start_ptr++;
     }
 
-    reference.increment();
-
+    ref_count = new unsigned int(1);
 }
 
 my_string& my_string::operator= (my_string const& s)
 {
-    m_data = s.m_data;
-    m_size = s.m_size;
-    reference = s.reference;
+    // self assignment check
+    if (this == &s){
+        return *this;
+    }
 
-    reference.increment();
+    // cleanup data of the current object if this is the final reference
+    if(--(*ref_count) == 0){
+        delete[] m_data;
+        delete[] ref_count;
+    }
+    
+    // copy data and reference count
+    this->m_data = s.m_data;
+    this->m_size = s.m_size;
+    this->ref_count = s.ref_count;
+
+    (*ref_count)++;
+
 
     return *this;
 }
 
 my_string::my_string(my_string const& s)
 {
-    m_data = s.m_data;
-    m_size = s.m_size;
-    reference = s.reference;
+    this->m_data = s.m_data;
+    this->m_size = s.m_size;
+    this->ref_count = s.ref_count;
 
-    reference.increment();
+    (*ref_count)++;
 }
 
 my_string::~my_string()
 {
-    // this is greater than 1 as it includes itself (might need to revisit)
-    if(reference.getCount() > 1)
-    {
-        reference.decrement();
+    if (--(*ref_count) == 0) {
+        std::cout << "Reference counter equals 0, freeing memory..." << std::endl;
+        delete[] m_data;
+        delete ref_count;
     }
-    else{
-        std::cout << "Reference count = 0, freeing memory..." << std::endl;
-        delete m_data;
-    }
-
 }
 
 void my_string::print() const
 {
-    std::cout << m_data << " [" << reference.getCount() << "] " << std::endl;
-
+    std::cout << m_data << " [" << *ref_count << "] " << std::endl;
 }
 
 char my_string::getChar(const int& i) const
