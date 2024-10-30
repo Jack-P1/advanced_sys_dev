@@ -3,10 +3,10 @@
 using namespace std;
 
 char const * groups[] = {
-    "Bump",
+    "BumpUp",
 };
 
-DEFINE_TEST_G(testMemoryAllocSuccessfullForCorrectInput, Bump)
+DEFINE_TEST_G(testMemoryAllocSuccessfullForCorrectInput, BumpUp)
 {
     bump_allocator bumper(20 * sizeof(int));
 
@@ -18,7 +18,7 @@ DEFINE_TEST_G(testMemoryAllocSuccessfullForCorrectInput, Bump)
 
 }
 
-DEFINE_TEST_G(testMemoryAllocSuccessfullForDifferentTypes, Bump)
+DEFINE_TEST_G(testMemoryAllocSuccessfullForDifferentTypes, BumpUp)
 {
     bump_allocator bumper(25 * sizeof(int));
 
@@ -36,7 +36,7 @@ DEFINE_TEST_G(testMemoryAllocSuccessfullForDifferentTypes, Bump)
 
 }
 
-DEFINE_TEST_G(testMemoryAllocFailsIfSizeGreaterThanHeap, Bump)
+DEFINE_TEST_G(testMemoryAllocFailsIfSizeGreaterThanHeap, BumpUp)
 {
     bump_allocator bumper(20 * sizeof(int));
 
@@ -45,7 +45,7 @@ DEFINE_TEST_G(testMemoryAllocFailsIfSizeGreaterThanHeap, Bump)
 
 }
 
-DEFINE_TEST_G(testMemoryAllocAddressIsCorrectlyAligned, Bump)
+DEFINE_TEST_G(testMemoryAllocAddressIsCorrectlyAligned, BumpUp)
 {
     bump_allocator bumper(20 * sizeof(int));
 
@@ -57,7 +57,7 @@ DEFINE_TEST_G(testMemoryAllocAddressIsCorrectlyAligned, Bump)
 
 }
 
-DEFINE_TEST_G(testMemoryDeallocWhenAllocationCountReachesZero, Bump)
+DEFINE_TEST_G(testMemoryDeallocWhenAllocationCountReachesZero, BumpUp)
 {
     bump_allocator bumper(20 * sizeof(int));
 

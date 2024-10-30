@@ -46,15 +46,14 @@ class bump_allocator {
                 return nullptr;
             }
 
-            void* type_ptr = (void*)aligned_next;
-
+            // increment the pointer by alignment padding plus size
             next = (char *) aligned_next + size;
 
             allocation_count++;
 
             bytes_allocated += size + alignment_padding;
 
-            return reinterpret_cast<T*> (type_ptr);
+            return reinterpret_cast<T*> (aligned_next);
         }
 
         template <typename T>
