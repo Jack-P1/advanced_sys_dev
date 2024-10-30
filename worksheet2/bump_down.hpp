@@ -33,21 +33,25 @@ class bump_down_allocator {
         {
             std::size_t size = sizeof(T) * num;
 
+            // if no alignment provided use alignof type
             if(align == 0)
             {
                 align = alignof(T);
             }
-
+            
+            // get aligned memory address
             unsigned long aligned_end = (unsigned long) end & ~(align-1);
 
+            // check that there is enough space
             if(aligned_end - size < (unsigned long) start)
             {
                 return nullptr;
             }
 
-            end -= size - ((unsigned long) end - aligned_end);
+            // decrement memory address
+            end -= size + ((unsigned long) end - aligned_end);
 
-            return reinterpret_cast<T*> (aligned_end);
+            return reinterpret_cast<T*> (end);
         }
 
         template <typename T>

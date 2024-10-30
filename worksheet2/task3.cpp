@@ -10,6 +10,7 @@ int main()
 
     bump_down_allocator bumpDown(20);
 
+    // bump down alloc tests
     std::cout << "Bump down tests: " << std::endl;
     // 1 byte
     char* test = bumpDown.alloc<char>(1);
@@ -30,16 +31,15 @@ int main()
         std::cout << "Not enough memory, y = nullptr" << std::endl;
     }
 
+    // Benchmarks
     std::cout << "Benchmarks...." << std::endl;
 
+    // instantiate both allocators with enough size for 100000 runs
     bump_allocator bumpUpBench(400100);
     bump_down_allocator bumpDownBench(400100);
 
-    auto (bump_allocator::*bumpUpPtr)(unsigned int, unsigned int) = &bump_allocator::alloc<int>;
-    auto (bump_down_allocator::*bumpDownPtr)(unsigned int, unsigned int) = &bump_down_allocator::alloc<int>;
-
     benchmark bench;
-
+    
     bench.measureAverageFunctionRuntime(&bump_allocator::alloc<int>, &bumpUpBench, (unsigned int)1,(unsigned int) 0);
     bench.measureAverageFunctionRuntime(&bump_down_allocator::alloc<int>, &bumpDownBench, (unsigned int)1,(unsigned int) 0);
 
