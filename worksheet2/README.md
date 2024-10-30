@@ -66,7 +66,7 @@ template <typename T>
 
 The above code shows my implementation to allocate memory. This is a templated function which accepts two arguments - the number of objects of type `T` (used for the size calculation `sizeof(T) * num;`) and `align`. This allows the allocation function to be generic for different types and memory requirement,this is called like so: `char* x = test.alloc<char>(4)`.
 
-Align is used to arrange the memory address to the required byte boundary - e.g. one byte for a char, four bytes for an int. Typically, this speeds up operations and is even strictly enforced on architecture such as ARM. If no `align` argument is provided, the value just defaults to the result of the `alignof()` C++ function. Then it performs the necessary alignment calculations and stores the aligned address and padding. 
+Align is used to arrange the memory address to the required byte boundary - e.g. one byte for a char, four bytes for an int. Typically, this speeds up operations and is even strictly enforced on architecture such as ARM. If no `align` argument is provided, the value just defaults to the result of the `alignof()` C++ function. Then it performs the necessary alignment calculations (rounds up to the nearest multiple of the alignment and clears the least significant bits) stores the aligned address and padding. 
 
 Next, a check is performed to ensure there is enough memory, taking into account the required padding and size. If this would result in an overflow then a `nullptr` is returned.
 
@@ -254,9 +254,130 @@ This is a templated function with a few template arguments:
 - `Ret` is the return type of the class method. I have implemented is this way due to the alloc function being templated, so the return type is not known until runtime. 
 - `... Args` which allows the function to accept a variable number of arguments.
 
+This utlizes the C++ library chrono as a way to measure the time taken to execute the function. The function is executed 100000 times in a loop, with the time elapsed added to `ms_double`, and then this is averaged across the 100000 runs. Due to the way the function is written, the line: `(obj->*alloc)(std::forward<Args>(args)...);` can be used with any combination of object, method, and function arguments. 
 
+The next goal of this task was to refactor the bump allocator to bump down instead of up.
 
+```c++
+class bump_down_allocator {
+    private:
+        char* start;
+        char* end;
+        unsigned int allocation_count = 0;
+        size_t total_size = 0;
 
+    public:
+        bump_down_allocator()
+        {
+            // 20 bytes as default
+            start = (char*)malloc(5 * sizeof(int));
+            end = start;
+            end += 5 * sizeof(int);
+        }
 
+        bump_down_allocator(const size_t size_allocated)
+        {
+            total_size = size_allocated;
+            start = (char*)malloc(total_size);
+            end = start;
+            end += total_size;
+        }
 
+        template <typename T>
+        T* alloc(unsigned int num, unsigned int align = 0)
+        {
+            std::size_t size = sizeof(T) * num;
 
+            // if no alignment provided use alignof type
+            if(align == 0)
+            {
+                align = alignof(T);
+            }
+            
+            // get aligned memory address
+            unsigned long aligned_end = (unsigned long) end & ~(align-1);
+
+            // check that there is enough space
+            if(aligned_end - size < (unsigned long) start)
+            {
+                return nullptr;
+            }
+
+            // decrement memory address
+            end -= size + ((unsigned long) end - aligned_end);
+
+            return reinterpret_cast<T*> (end);
+        }
+
+        void dealloc()
+        {
+            if((--allocation_count) == 0){
+                end = start;
+                end += total_size;
+                std::cout << "allocation 0, allocater reset: " << static_cast<void*> (end) << std::endl;
+            }
+
+        }
+
+        ~bump_down_allocator(){
+            free(start);
+        }
+        
+};
+```
+
+The only notable difference in the constructors is that there is now an `end` pointer which is set to the end of the heap. This is the pointer which will be decremented down to allocate available memory.
+
+The primary difference is in the allocation function:
+
+```c++
+template <typename T>
+        T* alloc(unsigned int num, unsigned int align = 0)
+        {
+            std::size_t size = sizeof(T) * num;
+
+            // if no alignment provided use alignof type
+            if(align == 0)
+            {
+                align = alignof(T);
+            }
+            
+            // get aligned memory address
+            unsigned long aligned_end = (unsigned long) end & ~(align-1);
+
+            // check that there is enough space
+            if(aligned_end - size < (unsigned long) start)
+            {
+                return nullptr;
+            }
+
+            // decrement memory address
+            end -= size + ((unsigned long) end - aligned_end);
+
+            return reinterpret_cast<T*> (end);
+        }
+```
+
+Like the bump up allocate fuction, this is a templated function which accepts any type `T` and is able to allocate `sizeof(T) * num` space if available.
+
+This allocation function is more efficient for a couple of reasons:
+- The alignment calculation is slightly simpler, it only has to do a bitwise AND (`&`) to clear the least significant bits and round down
+- There are less control paths which produces less instructions
+
+As previously mentioned the pointer in this allocater begins at the end of the memory and decrements down. Meaning it is returned after being decremented. 
+
+The deallocator and destructor methods are nearly identical to the bump up allocator. The only different being that the `end` pointer is reset to the end of the heap.
+
+The above implementation can be found in `bump_down.hpp`.
+
+After implementing the bump down allocator I used the benchmark library I wrote to compare this against bump up. 
+
+I ran this with no optimizations, -02, and -O3 - results below:
+
+- No optimizations: bump up took 4.37124e-05ms,bump down took 3.13111e-05ms
+- -O2 flag: bump up took 2.77898e-05ms, bump down took 2.77618e-05ms
+- -O3 flag: bump up took 2.78578e-05ms, bump down took 2.79799e-05ms
+
+As you can see, bump down is usually slightly faster, but took longer with the -O3 flag. I ran this a number of times and saw that the results were consistently close but neither allocator was consistently faster. I think this could be due to the -O3 flag adding more aggressive optimizations. Therefore, both solutions have been optimized to the point that there is not much difference between the two.
+
+This code can be found in `task3.cpp`.
