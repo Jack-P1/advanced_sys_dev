@@ -56,16 +56,18 @@ class bump_allocator {
             return reinterpret_cast<T*> (aligned_next);
         }
 
-        template <typename T>
-        void dealloc(T* ptr)
+        void dealloc()
         {
             if((--allocation_count) == 0){
-                free(bump_ptr);
                 next = bump_ptr;
                 bytes_allocated = 0;
                 std::cout << "allocation 0, allocater reset: " << static_cast<void*> (next) << std::endl;
             }
 
+        }
+
+        ~bump_allocator(){
+            free(bump_ptr);
         }
         
 };

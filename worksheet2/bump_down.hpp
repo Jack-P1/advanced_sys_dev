@@ -54,16 +54,18 @@ class bump_down_allocator {
             return reinterpret_cast<T*> (end);
         }
 
-        template <typename T>
-        void dealloc(T* ptr)
+        void dealloc()
         {
             if((--allocation_count) == 0){
-                free(start);
                 end = start;
                 end += total_size;
                 std::cout << "allocation 0, allocater reset: " << static_cast<void*> (end) << std::endl;
             }
 
+        }
+
+        ~bump_down_allocator(){
+            free(start);
         }
         
 };
