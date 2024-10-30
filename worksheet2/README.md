@@ -108,6 +108,151 @@ Null test = nullptr as not enough space
 
 ## Task 2
 
+For this task, I used the simpletest framework, which can be found here: https://github.com/kudaba/simpletest.
+
+I developed various unit tests to validate my allocator:
+
+```c++
+char const * groups[] = {
+    "BumpUp",
+};
+
+DEFINE_TEST_G(testMemoryAllocSuccessfullForCorrectInput, BumpUp)
+{
+    bump_allocator bumper(20 * sizeof(int));
+
+    int * x = bumper.alloc<int>(10);
+    TEST_MESSAGE(x != nullptr, "Failed to allocate!!!!");
+
+    int * y = bumper.alloc<int>(10);
+    TEST_MESSAGE(y != nullptr, "Failed to allocate!!!!");
+
+}
+
+DEFINE_TEST_G(testMemoryAllocSuccessfullForDifferentTypes, BumpUp)
+{
+    bump_allocator bumper(25 * sizeof(int));
+
+    int * x = bumper.alloc<int>(10);
+    TEST_MESSAGE(x != nullptr, "Failed to allocate!!!!");
+
+    int * y = bumper.alloc<int>(10);
+    TEST_MESSAGE(y != nullptr, "Failed to allocate!!!!");
+
+    char * z = bumper.alloc<char>(20);
+    TEST_MESSAGE(y != nullptr, "Failed to allocate!!!!");
+
+    char * t = bumper.alloc<char>(1);
+    TEST_MESSAGE(t == nullptr, "Should have failed to allocate!!!!");
+
+}
+
+DEFINE_TEST_G(testMemoryAllocFailsIfSizeGreaterThanHeap, BumpUp)
+{
+    bump_allocator bumper(20 * sizeof(int));
+
+    int * z = bumper.alloc<int>(30);
+    TEST_MESSAGE(z == nullptr, "Should have failed to allocate!!!!");
+
+}
+
+DEFINE_TEST_G(testMemoryAllocAddressIsCorrectlyAligned, BumpUp)
+{
+    bump_allocator bumper(20 * sizeof(int));
+
+    char* x = bumper.alloc<char>(1);
+    TEST_MESSAGE(x != nullptr, "Failed to allocate!!!!");
+
+    int* y = bumper.alloc<int>(1);
+    TEST_MESSAGE((reinterpret_cast<uintptr_t>(y) % alignof(int)) == 0, "Memory address is not aligned!");
+
+}
+
+DEFINE_TEST_G(testMemoryDeallocWhenAllocationCountReachesZero, BumpUp)
+{
+    bump_allocator bumper(20 * sizeof(int));
+
+    int * x = bumper.alloc<int>(10);
+    int * y = bumper.alloc<int>(10);
+
+    int * xMemoryAddress = x;
+
+    bumper.dealloc(x);
+    bumper.dealloc(y);
+
+    int * z = bumper.alloc<int>(10);
+
+    TEST_MESSAGE(z == xMemoryAddress, "Failed to reset pointer to beginning of heap!");
+}
+```
+This can be found in`bump_tests.cpp`.
+
+These cover the requirements for both the allocate and deallocate functions.
+
+- **testMemoryAllocSuccessfullForCorrectInput**: Is a success case to validate that the allocator returns a valid pointer.
+
+- **testMemoryAllocSuccessfullForDifferentTypes**: This is similar to the above but ensures that it functions with a variety of types.
+
+- **testMemoryAllocFailsIfSizeGreaterThanHeap**: This test validates that a null pointer is returned if the requests size is greater than the available memory in the heap.
+
+- **testMemoryAllocAddressIsCorrectlyAligned**: This validates that the memory address is properly aligned according to the type. This is done by first assigning a char and then an int. The int will not be properly aligned by default so will need to be padded by three bytes to a four byte boundary. This ensures the alignment calculation is correct.
+
+- **testMemoryDeallocWhenAllocationCountReachesZero**: This tests that the deallocate function resets as expected. To do this, it compares the address of the first allocated pointer before resetting to that of the first pointer after resetting and ensures they are the same address.
+
+These cover the scope of the functionality of the allocator so far. The output of the test file is:
+
+```
+Running all tests in groups [BumpUp].
+Running [BumpUp/testMemoryAllocSuccessfullForCorrectInput]: Passed 2 out of 2 tests in 3e-06 seconds
+Running [BumpUp/testMemoryAllocSuccessfullForDifferentTypes]: Passed 4 out of 4 tests in 1e-06 seconds
+Running [BumpUp/testMemoryAllocFailsIfSizeGreaterThanHeap]: Passed 1 out of 1 tests in 1e-06 seconds
+Running [BumpUp/testMemoryAllocAddressIsCorrectlyAligned]: Passed 2 out of 2 tests in 0 seconds
+Running [BumpUp/testMemoryDeallocWhenAllocationCountReachesZero]allocation 0, allocater reset: 0x9232c0
+: Passed 1 out of 1 tests in 1.9e-05 seconds
+5 Tests finished. All 10 assertions are passing.
+```
+I organised these tests into a group called 'BumpUp' and then defined individual tests within that group. This means that the test output is verbose and if one fails it is easy to identify which specific case is failing.
+
+## Task 3
+
+The first part of this task is to implement a small benchmark library which accepts `void function(void)` and different numbers of arguments.
+
+To achieve this I implemented the following function:
+
+```c++
+template <typename T1, typename Ret, typename... Args>
+        void measureAverageFunctionRuntime(Ret (T1::*alloc)(Args...), T1* obj, Args... args)
+        {
+            
+            auto startTime = std::chrono::high_resolution_clock::now();
+            (obj->*alloc)(std::forward<Args>(args)...);
+            auto endTime = std::chrono::high_resolution_clock::now();
+
+            uint runs = 1;
+
+            std::chrono::duration<double, std::milli> ms_double = endTime - startTime;
+            for(int i = 0; i < 100000; i++)
+            {
+                auto startTime = std::chrono::high_resolution_clock::now();
+                (obj->*alloc)(std::forward<Args>(args)...);
+                auto endTime = std::chrono::high_resolution_clock::now();
+
+                ms_double += endTime - startTime;
+
+                
+                runs += 1;
+            }
+
+            ms_double = ms_double / runs;
+            std::cout << ms_double.count() << "ms\n";
+
+        }
+```
+
+This is a templated function with a few template arguments:
+- `T1` is the class being passed in
+- `Ret` is the return type of the class method. I have implemented is this way due to the alloc function being templated, so the return type is not known until runtime. 
+- `... Args` which allows the function to accept a variable number of arguments.
 
 
 
