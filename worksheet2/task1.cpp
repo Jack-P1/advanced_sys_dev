@@ -3,7 +3,8 @@
 #include <cstring>
 #include <iostream>
 
-int main(){
+int main()
+{
 
     bump_allocator test(25);
 
@@ -22,9 +23,9 @@ int main(){
 
     std::cout << "y address: "<< y << std::endl;
 
-    test.dealloc(x);
+    test.dealloc();
 
-    test.dealloc(y);
+    test.dealloc();
 
     // 4 bytes
     int* test1 = test.alloc<int>(1);

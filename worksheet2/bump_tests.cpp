@@ -66,8 +66,8 @@ DEFINE_TEST_G(testMemoryDeallocWhenAllocationCountReachesZero, BumpUp)
 
     int * xMemoryAddress = x;
 
-    bumper.dealloc(x);
-    bumper.dealloc(y);
+    bumper.dealloc();
+    bumper.dealloc();
 
     int * z = bumper.alloc<int>(10);
 
