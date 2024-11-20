@@ -29,7 +29,29 @@ In addition to the provided function signatures, I declared some class variables
 
 These functions are then defined in `task1.cpp`.
 
-*More detail here...
+```c++
+my_string::my_string(const char* pos)
+{
+    const char* start_ptr = pos;
+
+    unsigned int x = 0;
+    while(*pos != '\0'){
+        pos++;
+        x++;
+    }
+    
+    m_size = x;
+
+    m_data = new char[m_size];
+
+    for(int i = 0; i < m_size; i++){
+        m_data[i] = *start_ptr;
+        start_ptr++;
+    }
+
+}
+```
+The above constructor dynamically allocated memory by iterating over the provided `char` pointer until the null terminator. Then it calls the `new` keywork to allocate memory on the heap of the requested size (`m_size`).
 
 
 ## Task 2
